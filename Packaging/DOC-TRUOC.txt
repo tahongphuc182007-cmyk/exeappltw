@@ -1,0 +1,39 @@
+﻿AUTUMN HOTEL - QUẢN LÝ KHÁCH SẠN
+================================
+
+Cách dùng
+---------
+1. Chạy AutumnHotel-Setup-x.y.z.exe, bấm Next đến khi xong.
+   Bộ cài tự cài SQL Server Express LocalDB nếu máy chưa có và tạo sẵn dữ liệu mẫu.
+2. Mở "Autumn Hotel" từ Start menu hoặc Desktop.
+3. Đăng nhập:
+     Quản lý : admin / Admin@123
+     Lễ tân  : letan / Admin@123
+   Nên đổi mật khẩu sau lần đăng nhập đầu tiên.
+
+Không cần cài .NET, không cần SQL Server Management Studio, không cần chạy script SQL.
+
+Dữ liệu nằm ở đâu?
+------------------
+  %LocalAppData%\QuanLyKhachSan\Data\QuanLyKhachSan.mdf
+Mỗi tài khoản Windows có dữ liệu riêng. Gỡ cài đặt KHÔNG xóa dữ liệu này.
+Sao lưu: đóng ứng dụng, chạy lệnh  sqllocaldb stop MSSQLLocalDB  rồi chép hai tệp
+QuanLyKhachSan.mdf và QuanLyKhachSan_log.ldf ra nơi an toàn.
+
+Bản portable (.zip)
+-------------------
+Giải nén rồi chạy QuanLyKhachSan.exe. Máy cần có SQL Server Express LocalDB 2019 trở lên;
+nếu chưa có, chạy SqlLocalDB.msi đi kèm (cần quyền Administrator).
+
+Cổng web tra cứu (nếu đã chọn khi cài)
+--------------------------------------
+Mở "Autumn Hotel - Cổng web tra cứu" rồi vào http://localhost:5080.
+Để điện thoại cùng mạng quét được QR: sửa "urls" trong Web\appsettings.json thành
+http://0.0.0.0:5080, sửa Web:BaseUrl trong appsettings.json của ứng dụng thành
+http://<IP máy>:5080 và mở cổng 5080 trên tường lửa.
+
+Gặp lỗi khi mở?
+---------------
+Xem nhật ký tại %LocalAppData%\QuanLyKhachSan\khoi-tao.log
+Dùng SQL Server khác thay cho LocalDB: sửa ConnectionStrings:KhachSan trong appsettings.json
+(thư mục cài đặt). Ứng dụng vẫn tự tạo database nếu tài khoản có quyền.

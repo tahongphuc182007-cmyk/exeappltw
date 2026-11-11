@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>QuanLyKhachSan</RootNamespace>
+    <AssemblyName>QuanLyKhachSan</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <ApplicationIcon>Resources\logo.ico</ApplicationIcon>
+    <Product>Autumn Hotel - Quản lý khách sạn</Product>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <!-- Nhúng script tạo database vào exe để ứng dụng tự khởi tạo trên máy mới (Repositories/KhoiTaoCsdl.cs). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\01_CreateDatabase.sql" />
+    <EmbeddedResource Include="Scripts\02_InsertSampleData.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+  </ItemGroup>
+
+  <!-- Ảnh, logo và cấu hình được đọc từ thư mục chứa exe (AppContext.BaseDirectory), nên khi publish
+       một tệp (PublishSingleFile) phải để chúng nằm ngoài exe thay vì bị nhúng vào bên trong. -->
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+    <None Update="Resources\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,64 @@
+name: Đóng gói bộ cài đặt
+
+on:
+  workflow_dispatch:
+    inputs:
+      phien_ban:
+        description: "Số phiên bản (vd 1.0.0)"
+        default: "1.0.0"
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  dong-goi:
+    name: Tạo Setup.exe và bản portable
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cài Inno Setup 6
+        run: choco install innosetup -y --no-progress
+
+      - name: Xác định số phiên bản
+        id: pb
+        shell: pwsh
+        run: |
+          $v = '${{ inputs.phien_ban }}'
+          if ('${{ github.ref_type }}' -eq 'tag') { $v = '${{ github.ref_name }}'.TrimStart('v') }
+          if (-not $v) { $v = '1.0.0' }
+          "phien_ban=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Đóng gói
+        shell: pwsh
+        run: ./Packaging/dong-goi.ps1 -PhienBan ${{ steps.pb.outputs.phien_ban }}
+
+      - name: Kiểm tra cài đặt im lặng và tự tạo database
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem Packaging/Output/AutumnHotel-Setup-*.exe | Select-Object -First 1
+          $p = Start-Process $setup.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/LOG=setup.log' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Get-Content setup.log -Tail 60; throw "Cài đặt thất bại: $($p.ExitCode)" }
+          $exe = Join-Path $env:ProgramFiles 'Autumn Hotel\QuanLyKhachSan.exe'
+          $k = Start-Process $exe -ArgumentList '--khoi-tao' -Wait -PassThru
+          if ($k.ExitCode -ne 0) { Get-Content "$env:LOCALAPPDATA\QuanLyKhachSan\khoi-tao.log" -ErrorAction SilentlyContinue; throw "Khởi tạo database thất bại" }
+          $n = sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d QuanLyKhachSan -h -1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM dbo.NguoiDung"
+          Write-Host "Số tài khoản: $n"
+          if ([int]($n | Select-Object -Last 1) -lt 2) { throw "Thiếu dữ liệu mẫu" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AutumnHotel-${{ steps.pb.outputs.phien_ban }}
+          path: Packaging/Output/*
+
+      - name: Đính kèm vào GitHub Release (khi đẩy tag v*)
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Packaging/Output/*
